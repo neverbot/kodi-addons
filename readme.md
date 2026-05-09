@@ -8,6 +8,7 @@ repo (TMDb Helper, Embuary, …).
 The published index is served by GitHub Pages from
 [`docs/`](./docs):
 
+- Landing page: <https://neverbot.github.io/kodi-addons/>
 - Index: <https://neverbot.github.io/kodi-addons/addons.xml>
 - Repository add-on (zip): <https://neverbot.github.io/kodi-addons/repository.neverbot/repository.neverbot-1.0.0.zip>
 
@@ -38,19 +39,23 @@ kodi-addons/
 ├── addons.json                 # List of external add-ons to track.
 ├── build.py                    # Builds the published index into docs/.
 ├── docs/                       # GitHub Pages serves this verbatim.
+│   ├── index.html              # Auto-generated landing page.
 │   ├── addons.xml
 │   ├── addons.xml.md5
 │   ├── repository.neverbot/
-│   │   └── repository.neverbot-1.0.0.zip
-│   └── plugin.video.cinematic.collections/
-│       └── plugin.video.cinematic.collections-0.1.0.zip
+│   │   └── repository.neverbot-<ver>.zip
+│   └── <addon-id>/
+│       ├── <addon-id>-<ver>.zip
+│       └── <addon-id>-<ver>.zip   # older versions kept in place
 └── .github/workflows/publish.yml   # Runs build.py and commits docs/.
 ```
 
 `build.py` reads `addons.json`, fetches the latest GitHub release tag of
 each tracked add-on, downloads its source tarball at that tag, packages
-it as a Kodi-style zip, and rebuilds `addons.xml` + `addons.xml.md5`. It
-also packages the local `repository.neverbot/` source.
+it as a Kodi-style zip, and rebuilds `addons.xml` + `addons.xml.md5` plus
+`index.html`. It also packages the local `repository.neverbot/` source.
+Older zips of past versions are preserved so direct download links keep
+working.
 
 The GitHub Action runs on three triggers:
 
@@ -77,13 +82,20 @@ The GitHub Action runs on three triggers:
 
 Each tracked add-on needs a workflow that pings this repo on tag push.
 Copy [`notify-kodi-addons.yml`](https://github.com/neverbot/plugin.video.cinematic.collections/blob/master/.github/workflows/notify-kodi-addons.yml)
-into `.github/workflows/` of the add-on repo, then create a
-**fine-grained Personal Access Token** with the following scope:
+into `.github/workflows/` of the add-on repo, then create a Personal
+Access Token (either flavour works):
 
-- *Repository access* → only `neverbot/kodi-addons`.
-- *Repository permissions* → **Contents: read**, **Metadata: read** and
-  the all-important **Actions: read and write** (lets the token fire the
-  dispatch event).
+- **Fine-grained token** (recommended for minimum blast radius):
+  - *Repository access* → only `neverbot/kodi-addons`.
+  - *Repository permissions* → **Contents: read**, **Metadata: read**,
+    and **Actions: read and write** (lets the token fire the dispatch
+    event).
+  - Caveat: must be renewed when it expires (max 1 year).
+- **Classic token** (no expiration option):
+  - Single scope: `public_repo` (sufficient because both repos are
+    public; `repo` would also work but is overkill).
+  - Caveat: a classic token cannot be scoped to a single repo, so a leak
+    affects every public repo on the account.
 
 Store the token as the secret `KODI_REPO_DISPATCH_TOKEN` in the add-on
 repo (Settings → Secrets and variables → Actions → New repository
