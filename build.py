@@ -149,11 +149,122 @@ def build_addons_xml(addon_roots: list[ET.Element]) -> bytes:
     return b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + body + b"\n"
 
 
+def summary_en(root: ET.Element) -> str:
+    """Pull the en_GB summary out of an addon.xml root element, with a
+    sensible fallback if it's missing."""
+    for s in root.iter("summary"):
+        if s.attrib.get("lang") in ("en_GB", "en", None):
+            return (s.text or "").strip()
+    return ""
+
+
+def render_index_html(rows: list[dict]) -> str:
+    """Render docs/index.html — a tiny static landing page.
+
+    `rows` is a list of dicts with keys: id, name, version, summary, github
+    (None for the repository add-on, which is built locally).
+    """
+    repo_url = "https://github.com/neverbot/kodi-addons"
+    cards = []
+    for r in rows:
+        zip_url = f"{r['id']}/{r['id']}-{r['version']}.zip"
+        github_link = (
+            f'<a href="{r["github"]}">source</a>'
+            if r.get("github")
+            else f'<a href="{repo_url}">source</a>'
+        )
+        summary = r["summary"] or ""
+        cards.append(
+            "<article>"
+            f'<h3>{r["name"]} '
+            f'<span class="ver">v{r["version"]}</span></h3>'
+            f"<p>{summary}</p>"
+            "<p>"
+            f'<a class="btn" href="{zip_url}">Download zip</a> '
+            f"{github_link}"
+            "</p>"
+            f'<p class="id"><code>{r["id"]}</code></p>'
+            "</article>"
+        )
+    cards_html = "\n".join(cards)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>neverbot's Kodi add-ons</title>
+<style>
+  :root {{ color-scheme: light dark; }}
+  body {{
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 760px; margin: 2rem auto; padding: 0 1rem;
+  }}
+  h1 {{ margin-bottom: .25rem; }}
+  .lede {{ color: #666; margin-top: 0; }}
+  article {{
+    border: 1px solid #ccc4; border-radius: 8px;
+    padding: 1rem 1.25rem; margin: 1rem 0;
+  }}
+  article h3 {{ margin: 0 0 .25rem; }}
+  .ver {{ font-weight: 400; color: #888; font-size: .85em; }}
+  .id code {{ color: #888; font-size: .85em; }}
+  .btn {{
+    display: inline-block; padding: .35rem .8rem;
+    background: #0366d6; color: #fff; border-radius: 6px;
+    text-decoration: none; margin-right: .5rem;
+  }}
+  .btn:hover {{ background: #024ea0; }}
+  a {{ color: #0366d6; }}
+  pre {{
+    background: #f4f4f4; padding: .75rem 1rem; border-radius: 6px;
+    overflow-x: auto;
+  }}
+  @media (prefers-color-scheme: dark) {{
+    body {{ background: #111; color: #ddd; }}
+    .lede, .ver, .id code {{ color: #999; }}
+    pre {{ background: #1a1a1a; }}
+  }}
+</style>
+</head>
+<body>
+<h1>neverbot's Kodi add-ons</h1>
+<p class="lede">A small Kodi add-on repository.
+Install the repository add-on once, then get every add-on listed below
+(and updates to them) automatically.</p>
+
+<h2>Install</h2>
+<ol>
+  <li>Download the
+    <a href="repository.neverbot/repository.neverbot-1.0.0.zip"><strong>repository
+    add-on zip</strong></a>.</li>
+  <li>In Kodi: <em>Settings → Add-ons → Install from zip file</em> →
+    pick the file. Enable “Unknown sources” first if Kodi asks.</li>
+  <li>Then: <em>Settings → Add-ons → Install from repository →
+    neverbot's Kodi add-ons</em> → install whichever add-ons you want.</li>
+</ol>
+
+<h2>Add-ons</h2>
+{cards_html}
+
+<h2>Manual repository setup</h2>
+<p>If you'd rather configure Kodi to fetch from this URL directly:</p>
+<pre>https://neverbot.github.io/kodi-addons/</pre>
+<p>That's the <code>datadir</code> the repository add-on points at;
+<code>addons.xml</code> and <code>addons.xml.md5</code> live next to it.</p>
+
+<hr>
+<p><small>Source: <a href="{repo_url}">{repo_url}</a></small></p>
+</body>
+</html>
+"""
+
+
 def main() -> int:
     config = json.loads(CONFIG.read_text())
     DOCS.mkdir(exist_ok=True)
 
     addon_roots: list[ET.Element] = []
+    rows: list[dict] = []
 
     # 1) The repository add-on itself, from local source.
     log("packaging repository.neverbot from local source")
@@ -163,6 +274,11 @@ def main() -> int:
     build_zip(LOCAL_REPO_ADDON, repo_id, repo_ver, repo_out)
     copy_assets(LOCAL_REPO_ADDON, repo_id, repo_out)
     addon_roots.append(repo_root)
+    rows.append({
+        "id": repo_id, "name": repo_root.attrib.get("name", repo_id),
+        "version": repo_ver, "summary": summary_en(repo_root),
+        "github": None,
+    })
 
     # 2) Each tracked external add-on at its latest tag.
     with tempfile.TemporaryDirectory() as tmp_root:
@@ -190,12 +306,20 @@ def main() -> int:
             build_zip(source_dir, addon_id, addon_ver, out)
             copy_assets(source_dir, addon_id, out)
             addon_roots.append(root)
+            rows.append({
+                "id": addon_id, "name": root.attrib.get("name", addon_id),
+                "version": addon_ver, "summary": summary_en(root),
+                "github": f"https://github.com/{github}",
+            })
 
-    # 3) addons.xml + .md5
+    # 3) addons.xml + .md5 + index.html
     log("writing addons.xml")
     body = build_addons_xml(addon_roots)
     (DOCS / "addons.xml").write_bytes(body)
     (DOCS / "addons.xml.md5").write_text(hashlib.md5(body).hexdigest() + "\n")
+
+    log("writing index.html")
+    (DOCS / "index.html").write_text(render_index_html(rows), encoding="utf-8")
 
     log("done")
     return 0
