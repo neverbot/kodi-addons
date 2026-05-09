@@ -15,4 +15,27 @@
         <license>MIT</license>
         <platform>all</platform>
     </extension>
+</addon><addon id="plugin.video.cinematic.collections" name="Cinematic Collections" version="0.1.0" provider-name="neverbot">
+    <requires>
+        <import addon="xbmc.python" version="3.0.1" />
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="default.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="kodi.context.item">
+        <menu id="kodi.core.main">
+            <item library="context.py">
+                <label>30100</label>
+                <visible>!String.IsEmpty(ListItem.DBID) + [String.IsEqual(ListItem.DBType,movie) | String.IsEqual(ListItem.DBType,tvshow)]</visible>
+            </item>
+        </menu>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en_GB">Custom collections mixing movies and TV shows.</summary>
+        <summary lang="es_ES">Colecciones personalizadas que mezclan películas y series.</summary>
+        <description lang="en_GB">Create your own collections (e.g. "Marvel Cinematic Universe") that mix movies and TV shows from your library, in the order you choose.</description>
+        <description lang="es_ES">Crea tus propias colecciones (p. ej. "Universo Cinematográfico de Marvel") que mezclan películas y series de tu biblioteca, en el orden que elijas.</description>
+        <license>MIT</license>
+        <platform>all</platform>
+    </extension>
 </addon></addons>
