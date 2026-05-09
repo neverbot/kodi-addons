@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addons><addon id="repository.neverbot" name="neverbot's Kodi add-ons" version="1.0.0" provider-name="neverbot">
+    <extension point="xbmc.addon.repository" name="neverbot's Kodi add-ons">
+        <dir>
+            <info compressed="false">https://neverbot.github.io/kodi-addons/addons.xml</info>
+            <checksum>https://neverbot.github.io/kodi-addons/addons.xml.md5</checksum>
+            <datadir zip="true">https://neverbot.github.io/kodi-addons/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en_GB">neverbot's Kodi add-ons</summary>
+        <summary lang="es_ES">Add-ons de Kodi de neverbot</summary>
+        <description lang="en_GB">Repository for Kodi add-ons published by neverbot. Install this once and you'll get the add-ons (and updates to them) automatically.</description>
+        <description lang="es_ES">Repositorio para add-ons de Kodi publicados por neverbot. Instala este repositorio una vez y recibirás los add-ons (y sus actualizaciones) automáticamente.</description>
+        <license>MIT</license>
+        <platform>all</platform>
+    </extension>
+</addon></addons>
