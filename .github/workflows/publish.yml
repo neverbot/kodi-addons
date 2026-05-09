@@ -3,10 +3,6 @@ name: Publish Kodi repository
 on:
   # Manual trigger from the Actions tab.
   workflow_dispatch:
-  # Periodic check so a new tag in any tracked addon repo is picked up
-  # without needing a manual nudge here.
-  schedule:
-    - cron: "37 5 * * *"
   # Run on pushes to master so editing addons.json or the build script
   # republishes immediately.
   push:
@@ -16,6 +12,10 @@ on:
       - build.py
       - repository.neverbot/**
       - .github/workflows/publish.yml
+  # Triggered by tracked add-on repos when they push a release tag.
+  # See each tracked repo's notify-kodi-addons.yml workflow.
+  repository_dispatch:
+    types: [addon-released]
 
 permissions:
   contents: write

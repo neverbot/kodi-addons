@@ -52,21 +52,42 @@ each tracked add-on, downloads its source tarball at that tag, packages
 it as a Kodi-style zip, and rebuilds `addons.xml` + `addons.xml.md5`. It
 also packages the local `repository.neverbot/` source.
 
-The GitHub Action runs daily, on push to `master`, and on manual trigger.
-A new tag in any tracked add-on gets picked up by the next scheduled run
-(or by hitting "Run workflow" from the Actions tab for an immediate
-publish).
+The GitHub Action runs on three triggers:
+
+- `push` to `master` (so editing `build.py`, `addons.json` or the
+  `repository.neverbot/` source republishes immediately).
+- `workflow_dispatch` (manual button from the Actions tab).
+- `repository_dispatch` of type `addon-released` — fired by tracked
+  add-on repos when they push a release tag (see below).
 
 ### Releasing a new version of an add-on
 
-1. In the add-on repo, bump `version` in `addon.xml`, commit and tag:
+1. In the add-on repo, bump `version` in `addon.xml`, commit and push:
    ```sh
    git commit -am "release v0.2.0"
    git tag v0.2.0
    git push --tags
    ```
-2. (Optionally) trigger the publish workflow in this repo manually for an
-   immediate publish — otherwise wait up to ~24h.
+2. The add-on repo's `notify-kodi-addons.yml` workflow fires on the tag
+   push, sends a `repository_dispatch` to this repo, and the publish
+   workflow rebuilds `docs/` automatically. End users see the update on
+   Kodi's next add-on check (~1 h).
+
+### Setting up a tracked add-on repo for automatic publish
+
+Each tracked add-on needs a workflow that pings this repo on tag push.
+Copy [`notify-kodi-addons.yml`](https://github.com/neverbot/plugin.video.cinematic.collections/blob/master/.github/workflows/notify-kodi-addons.yml)
+into `.github/workflows/` of the add-on repo, then create a
+**fine-grained Personal Access Token** with the following scope:
+
+- *Repository access* → only `neverbot/kodi-addons`.
+- *Repository permissions* → **Contents: read**, **Metadata: read** and
+  the all-important **Actions: read and write** (lets the token fire the
+  dispatch event).
+
+Store the token as the secret `KODI_REPO_DISPATCH_TOKEN` in the add-on
+repo (Settings → Secrets and variables → Actions → New repository
+secret).
 
 ### Adding a new add-on to the repo
 
