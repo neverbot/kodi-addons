@@ -15,7 +15,7 @@
         <license>MIT</license>
         <platform>all</platform>
     </extension>
-</addon><addon id="plugin.video.cinematic.collections" name="Cinematic Collections" version="0.1.0" provider-name="neverbot">
+</addon><addon id="plugin.video.cinematic.collections" name="Cinematic Collections" version="0.1.1" provider-name="neverbot">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
     </requires>
@@ -37,5 +37,18 @@
         <description lang="es_ES">Crea tus propias colecciones (p. ej. "Universo Cinematográfico de Marvel") que mezclan películas y series de tu biblioteca, en el orden que elijas.</description>
         <license>MIT</license>
         <platform>all</platform>
+        <news>
+v0.1.1 (2026-05-09)
+- Add changelog metadata so Kodi shows release notes in the install dialog.
+
+v0.1.0 (2026-05-09)
+- Initial release.
+- Create, rename and delete collections that mix movies and TV shows.
+- Add items via the global context menu on any movie or TV show.
+- Reorder items inside a collection (move up / move down).
+- Cached metadata so collections render instantly even on shared MariaDB libraries.
+- Refresh metadata per item or per collection from the context menu.
+- English and Spanish translations.
+        </news>
     </extension>
 </addon></addons>
