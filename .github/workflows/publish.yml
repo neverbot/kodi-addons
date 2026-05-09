@@ -1,0 +1,54 @@
+name: Publish Kodi repository
+
+on:
+  # Manual trigger from the Actions tab.
+  workflow_dispatch:
+  # Periodic check so a new tag in any tracked addon repo is picked up
+  # without needing a manual nudge here.
+  schedule:
+    - cron: "37 5 * * *"
+  # Run on pushes to master so editing addons.json or the build script
+  # republishes immediately.
+  push:
+    branches: [master]
+    paths:
+      - addons.json
+      - build.py
+      - repository.neverbot/**
+      - .github/workflows/publish.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build the published repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 build.py
+
+      - name: Commit and push docs/ if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          if git diff --cached --quiet; then
+            echo "no changes to publish"
+          else
+            git commit -m "publish: rebuild docs/ from build.py"
+            git push
+          fi

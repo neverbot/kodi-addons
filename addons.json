@@ -1,0 +1,8 @@
+{
+  "addons": [
+    {
+      "id": "plugin.video.cinematic.collections",
+      "github": "neverbot/plugin.video.cinematic.collections"
+    }
+  ]
+}
