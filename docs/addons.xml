@@ -15,7 +15,7 @@
         <license>MIT</license>
         <platform>all</platform>
     </extension>
-</addon><addon id="plugin.video.cinematic.collections" name="Cinematic Collections" version="0.1.1" provider-name="neverbot">
+</addon><addon id="plugin.video.cinematic.collections" name="Cinematic Collections" version="0.2.0" provider-name="neverbot">
     <requires>
         <import addon="xbmc.python" version="3.0.1" />
     </requires>
@@ -38,6 +38,10 @@
         <license>MIT</license>
         <platform>all</platform>
         <news>
+v0.2.0 (2026-11-10)
+- Nest collections: "Move to collection…" turns a collection into a folder inside another one.
+- Subcollections are hidden from the top-level list and can be reordered, renamed, deleted or taken out from inside their parent.
+
 v0.1.1 (2026-05-09)
 - Add changelog metadata so Kodi shows release notes in the install dialog.
 
